@@ -19,7 +19,7 @@ CREATE TABLE phone_model_option (
   phoneModelID INT NOT NULL,
   price INT NOT NULL,
   name VARCHAR(100) NOT NULL,
-  hexColorID INT NOT NULL,
+  hexColorID INT,
   PRIMARY KEY (phoneModelOptionID)
 );
 
@@ -91,7 +91,6 @@ CREATE TABLE phone (
   phoneCondition ENUM('New', 'Used', 'Refurbished') NOT NULL,
   status ENUM('InStore', 'Active', 'Repairing', 'Inactive') NOT NULL,
   ownedByUserID INT,
-  orderID INT,
   warrantyID INT,
   warrantyUntil DATE,
   inStoreID INT,

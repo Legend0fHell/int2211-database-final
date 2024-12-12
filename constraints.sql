@@ -15,12 +15,16 @@ ADD FOREIGN KEY (techSpecID) REFERENCES technical_spec(techSpecID);
 
 ALTER TABLE phone_review
 ADD FOREIGN KEY (phoneModelID) REFERENCES phone_model(phoneModelID),
-ADD FOREIGN KEY (phoneModelOptionID) REFERENCES phone_model_option(phoneModelOptionID);
+ADD FOREIGN KEY (phoneModelOptionID) REFERENCES phone_model_option(phoneModelOptionID),
+ADD FOREIGN KEY (userID) REFERENCES users(userID);
 
 ALTER TABLE phone_review_detail
 ADD FOREIGN KEY (reviewID) REFERENCES phone_review(reviewID);
 
 ALTER TABLE phone
+ADD FOREIGN KEY (ownedByUserID) REFERENCES users(userID),
+ADD FOREIGN KEY (warrantyID) REFERENCES warranty(warrantyID),
+ADD FOREIGN KEY (inStoreID) REFERENCES store(storeID),
 ADD FOREIGN KEY (phoneModelID) REFERENCES phone_model(phoneModelID),
 ADD FOREIGN KEY (phoneModelOptionID) REFERENCES phone_model_option(phoneModelOptionID);
 
@@ -39,18 +43,35 @@ ADD FOREIGN KEY (serviceID) REFERENCES services(serviceID);
 
 ALTER TABLE users
 ADD FOREIGN KEY (provinceID) REFERENCES province(provinceID),
-ADD FOREIGN KEY (districtID) REFERENCES district(districtID);
+ADD FOREIGN KEY (districtID) REFERENCES district(districtID),
+ADD FOREIGN KEY (storeID) REFERENCES store(storeID);
 
 ALTER TABLE order_detail
-ADD FOREIGN KEY (orderID) REFERENCES orders(orderID);
+ADD FOREIGN KEY (orderID) REFERENCES orders(orderID),
+ADD FOREIGN KEY (phoneID) REFERENCES phone(phoneID),
+ADD FOREIGN KEY (serviceID) REFERENCES services(serviceID),
+ADD FOREIGN KEY (promotionID) REFERENCES promotion(promotionID);
+
+ALTER TABLE orders
+ADD FOREIGN KEY (userID) REFERENCES users(userID),
+ADD FOREIGN KEY (employeeID) REFERENCES users(userID),
+ADD FOREIGN KEY (fromStoreID) REFERENCES store(storeID);
 
 ALTER TABLE promotion_detail_phone
+ADD FOREIGN KEY (phoneModelID) REFERENCES phone_model(phoneModelID),
+ADD FOREIGN KEY (phoneModelOptionID) REFERENCES phone_model_option(phoneModelOptionID),
 ADD FOREIGN KEY (promotionID) REFERENCES promotion(promotionID);
 
 ALTER TABLE promotion_detail_service
+ADD FOREIGN KEY (serviceID) REFERENCES services(serviceID),
+ADD FOREIGN KEY (serviceTypeID) REFERENCES service_type(serviceTypeID),
 ADD FOREIGN KEY (promotionID) REFERENCES promotion(promotionID);
 
 # Add default constraint to tables
+ALTER TABLE phone_model
+ALTER COLUMN countView SET DEFAULT 0,
+ALTER COLUMN countSold SET DEFAULT 0;
+
 ALTER TABLE orders
 ALTER COLUMN status SET DEFAULT 'Pending';
 
