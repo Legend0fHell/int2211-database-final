@@ -87,7 +87,7 @@ CREATE TABLE phone (
   phoneModelID INT NOT NULL,
   phoneModelOptionID INT NOT NULL,
   imei VARCHAR(15) NOT NULL,
-  customPrice INT NOT NULL,
+  customPrice INT,
   phoneCondition ENUM('New', 'Used', 'Refurbished') NOT NULL,
   status ENUM('InStore', 'Active', 'Repairing', 'Inactive') NOT NULL,
   ownedByUserID INT,
