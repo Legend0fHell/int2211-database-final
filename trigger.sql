@@ -58,4 +58,28 @@ END $$
 
 -- TỰ ĐỘNG KÍCH HOẠT BẢO HÀNH CHO SẢN PHẨM MỚI MUA
 
+-- KIỂM TRA DỮ LIỆU TRƯỚC KHI THÊM VÀO BẢNG ORDERS
+DROP TRIGGER IF EXISTS before_insert_orders $$
+
+CREATE TRIGGER before_insert_orders
+BEFORE INSERT ON orders
+FOR EACH ROW
+BEGIN
+    -- Kiểm tra userID
+    IF NOT EXISTS (
+        SELECT 1 FROM users WHERE userID = NEW.userID AND role = 'Customer'
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid userID: Must be a Customer';
+    END IF;
+
+    -- Kiểm tra employeeID
+    IF NOT EXISTS (
+        SELECT 1 FROM users WHERE userID = NEW.employeeID AND role = 'Employee'
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Invalid employeeID: Must be an Employee';
+    END IF;
+END$$
+
 DELIMITER ;
