@@ -183,7 +183,7 @@ CREATE TABLE promotion_detail_phone (
   promotionID INT NOT NULL,
   phoneModelID INT NOT NULL,
   phoneModelOptionID INT NOT NULL,
-  discountPercent DECIMAL(4,2),
+  discountPercent DECIMAL(5,2),
   discountFixed INT,
   fixedNewPrice INT,
   PRIMARY KEY (promotionID, phoneModelID, phoneModelOptionID)
@@ -193,7 +193,7 @@ CREATE TABLE promotion_detail_service (
   promotionID INT NOT NULL,
   serviceTypeID INT NOT NULL,
   serviceID INT NOT NULL,
-  discountPercent DECIMAL(4,2),
+  discountPercent DECIMAL(5,2),
   discountFixed INT,
   fixedNewPrice INT,
   PRIMARY KEY (promotionID, serviceTypeID, serviceID)
