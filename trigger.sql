@@ -18,24 +18,71 @@ END $$
 
 
 
+DELIMITER $$
+
 -- TỰ ĐỘNG KÍCH HOẠT BẢO HÀNH CHO SẢN PHẨM MỚI MUA
-DROP TRIGGER IF EXISTS after_order_detail_insert $$
-CREATE TRIGGER after_order_detail_insert
-AFTER INSERT ON order_detail
-FOR EACH ROW
-BEGIN
-    -- Lấy ngày hiện tại
-    DECLARE v_current_date DATE;
-    SET v_current_date = CURDATE();
+DROP TRIGGER IF EXISTS after_update_order_status $$
 
-    -- Lấy ngày hết hạn bảo hành
-    DECLARE v_warranty_end_date DATE;
-    SET v_warranty_end_date = DATE_ADD(v_current_date, INTERVAL 12 MONTH);
+CREATE TRIGGER after_update_order_status 
+AFTER UPDATE ON orders 
+FOR EACH ROW 
+BEGIN 
+    -- Khai báo các biến 
+    DECLARE v_phoneID INT;
+    DECLARE v_serviceID INT;
+    DECLARE v_serviceTypeID INT;
+    DECLARE v_warrantyDuration INT;
+    DECLARE done INT DEFAULT 0;
 
-    -- Thêm bảo hành cho sản phẩm
-    INSERT INTO warranty
-    VALUES (NEW.orderDetailID, v_current_date, v_warranty_end_date);
+    
+    -- Con trỏ để duyệt qua từng dòng của bảng order_detail
+    DECLARE cur_order_details CURSOR FOR 
+        SELECT phoneID, serviceID 
+        FROM order_detail
+        WHERE orderID = NEW.orderID;  
+    -- Handler để xử lý khi con trỏ duyệt hết dữ liệu 
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;  
+
+
+    -- Kiểm tra đơn hàng đã được hoàn tất chưa 
+    IF NEW.status = 'Completed' AND OLD.status != 'Completed' THEN
+        -- Mở con trỏ
+        OPEN cur_order_details;
+
+        read_order_details: LOOP 
+            -- Lấy dữ liệu từ con trỏ
+            FETCH cur_order_details INTO v_phoneID, v_serviceID;     
+
+            -- Kiểm tra nếu hết dữ liệu thì thoát khỏi vòng lặp 
+            IF done = 1 THEN  
+                LEAVE read_order_details; 
+            END IF;
+
+            -- Kiểm tra serviceTypeID trong bảng services 
+            SELECT serviceTypeID INTO v_serviceTypeID 
+            FROM services
+            WHERE serviceID = v_serviceID;
+
+            -- Chỉ bảo hành nếu serviceTypeID = 1
+            IF v_serviceTypeID = 1 THEN 
+                -- Lấy thời gian bảo hành từ bảng warranty
+                SELECT warrantyDuration INTO v_warrantyDuration 
+                FROM warranty 
+                WHERE warrantyID = v_serviceID;
+
+                -- Cập nhật thời gian bảo hành cho phone 
+                UPDATE phone 
+                SET warrantyUntil = DATE_ADD(NEW.shippedTime, INTERVAL v_warrantyDuration DAY)
+                WHERE phoneID = v_phoneID;
+            END IF;
+
+        END LOOP;
+
+        -- Đóng con trỏ
+        CLOSE cur_order_details;
+    END IF;
 END $$
+
 
 
 -- KIỂM TRA DỮ LIỆU TRƯỚC KHI THÊM VÀO BẢNG ORDERS
@@ -61,5 +108,7 @@ BEGIN
         SET MESSAGE_TEXT = 'Invalid employeeID: Must be an Employee';
     END IF;
 END$$
+
+
 
 DELIMITER ;
