@@ -148,7 +148,7 @@ CREATE PROCEDURE UpdatePhone(
     IN phoneCondition ENUM('New', 'Used', 'Refurbished'),
     IN customPrice INT,
     IN imei VARCHAR(15),
-    IN status ENUM('Active', 'InStore', 'Inactive'),
+    IN status ENUM('Active', 'InStore', 'Inactive', 'Repairing'),
     IN warrantyUntil DATE,
 )
 BEGIN

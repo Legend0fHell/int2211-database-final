@@ -309,6 +309,57 @@ BEGIN
     INSERT INTO order_detail(orderID, phoneID, serviceID, promotionID, originalPrice, finalPrice)
     VALUES (p_orderID, p_phoneID, p_serviceID, p_promotionID, v_original_price, v_final_price);
 
+END $$
+
+-- 14. SO SÁNH TECH_SPEC CỦA 2 MẪU ĐIỆN THOẠI
+DROP PROCEDURE IF EXISTS CompareTechSpec $$
+CREATE PROCEDURE CompareTechSpec(IN phoneModelOptionID1 INT, IN phoneModelOptionID2 INT)
+BEGIN
+    SELECT 
+        ts.name AS TechSpecName,
+        COALESCE(
+            (SELECT pts.infoText FROM phone_tech_spec pts 
+             WHERE pts.phoneModelOptionID = phoneModelOptionID1 AND pts.techSpecID = ts.techSpecID),
+            (SELECT pts.infoNum FROM phone_tech_spec pts 
+             WHERE pts.phoneModelOptionID = phoneModelOptionID1 AND pts.techSpecID = ts.techSpecID)
+        ) AS SpecValue1,
+        COALESCE(
+            (SELECT pts.infoText FROM phone_tech_spec pts 
+             WHERE pts.phoneModelOptionID = phoneModelOptionID2 AND pts.techSpecID = ts.techSpecID),
+            (SELECT pts.infoNum FROM phone_tech_spec pts 
+             WHERE pts.phoneModelOptionID = phoneModelOptionID2 AND pts.techSpecID = ts.techSpecID)
+        ) AS SpecValue2,
+         CASE 
+            WHEN COALESCE(
+                    (SELECT pts.infoText FROM phone_tech_spec pts 
+                     WHERE pts.phoneModelOptionID = phoneModelOptionID1 AND pts.techSpecID = ts.techSpecID),
+                    (SELECT pts.infoNum FROM phone_tech_spec pts 
+                     WHERE pts.phoneModelOptionID = phoneModelOptionID1 AND pts.techSpecID = ts.techSpecID)
+                ) = COALESCE(
+                    (SELECT pts.infoText FROM phone_tech_spec pts 
+                     WHERE pts.phoneModelOptionID = phoneModelOptionID2 AND pts.techSpecID = ts.techSpecID),
+                    (SELECT pts.infoNum FROM phone_tech_spec pts 
+                     WHERE pts.phoneModelOptionID = phoneModelOptionID2 AND pts.techSpecID = ts.techSpecID)
+                ) THEN 'Equal'
+            WHEN 
+                (SELECT COALESCE(pts.infoNum, 0) 
+                 FROM phone_tech_spec pts 
+                 WHERE pts.phoneModelOptionID = phoneModelOptionID1 AND pts.techSpecID = ts.techSpecID) > 
+                (SELECT COALESCE(pts.infoNum, 0) 
+                 FROM phone_tech_spec pts 
+                 WHERE pts.phoneModelOptionID = phoneModelOptionID2 AND pts.techSpecID = ts.techSpecID) 
+                THEN 'First phone is better'
+            ELSE 'Second phone is better'
+        END AS CompareResult
+    FROM 
+        technical_spec ts
+    WHERE 
+        ts.techSpecID IN 
+        (SELECT techSpecID FROM phone_tech_spec WHERE phoneModelOptionID = phoneModelOptionID1
+         UNION
+         SELECT techSpecID FROM phone_tech_spec WHERE phoneModelOptionID = phoneModelOptionID2)
+    ORDER BY
+        ts.name;
 END $$;
 
 
@@ -320,7 +371,6 @@ CALL GetMonthlyRevenue(2,2023);
 CALL ListMonthlyRevenue(2,2023);
 CALL TotalMoneyCustomerHaveToPay(3);
 CALL ExportInvoice(3);
-CALL AddOrderDetail(27, 1090, 1, 1);
 select * from order_detail
 where orderID = 27 and phoneID = 1090;
 CALL GetBestSellingPhonesByMonth(2, 2023);
@@ -328,3 +378,4 @@ CALL CheckWarranty(1, '2023-09-27');
 CALL UpdateInStoreIDToFromStoreID(49);
 CALL GetPhonesByTechSpec(2);
 CALL GetPhonesByPrice(2000000, 13000000);
+CALL CompareTechSpec(12,23);
