@@ -360,7 +360,7 @@ BEGIN
          SELECT techSpecID FROM phone_tech_spec WHERE phoneModelOptionID = phoneModelOptionID2)
     ORDER BY
         ts.name;
-END $$;
+END $$
 
 -- 15. QUẢN LÝ SỐ LƯỢNG TỔN KHO CỦA TỪNG MẪU ĐIỆN THOẠI Ở MỖI CỦA HÀNG
 drop procedure if exists checkStockLevel $$

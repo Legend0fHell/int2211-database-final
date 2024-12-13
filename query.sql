@@ -87,3 +87,7 @@ INNER JOIN
     technical_spec ts ON pts.techSpecID = ts.techSpecID
 ORDER BY
     pm.name, ts.name;
+
+-- TRÍCH XUẤT THÔNG TIN CỦA CÁC BÀI VIẾT
+SELECT articleID, content
+FROM article;
