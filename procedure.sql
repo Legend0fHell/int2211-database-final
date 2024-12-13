@@ -32,7 +32,6 @@ BEGIN
     ORDER BY pmo.price ASC;
 END $$
 
-
 -- ĐỀ XUẤT CÁC SẢN PHẨM TƯƠNG TỰ DỰA TRÊN ID VỚI PHONE CONDITION KHÁC NHAU
 DROP PROCEDURE IF EXISTS GetSimilarPhones $$
 CREATE PROCEDURE GetSimilarPhones(IN phoneID INT)
@@ -67,18 +66,34 @@ END $$
 
 -- QUẢN LÝ KINH DOANH
 
--- LẤY DOANH THU HÀNG NGÀY
-DROP PROCEDURE IF EXISTS GetDailyRevenue $$
-CREATE PROCEDURE GetDailyRevenue(IN targetDate DATE)
+
+-- THỐNG KÊ CHI TIẾT DOANH THU HÀNG THÁNG
+DROP PROCEDURE IF EXISTS ListMonthlyRevenue $$
+CREATE PROCEDURE ListMonthlyRevenue(IN targetMonth INT, IN targetYear INT)
 BEGIN
     SELECT
         DATE(o.orderTime) AS OrderDate,
         COUNT(DISTINCT o.orderID) AS TotalOrders,
-        SUM(od.finalPrice) AS TotalRevenue
+        SUM(od.finalPrice) AS DailyRevenue
     FROM orders o
     JOIN order_detail od ON o.orderID = od.orderID
-    WHERE DATE(o.orderTime) = targetDate
-    GROUP BY OrderDate;
+    WHERE YEAR(o.orderTime) = targetYear AND MONTH(o.orderTime) = targetMonth
+    GROUP BY OrderDate
+    ORDER BY OrderDate;
+END $$
+
+-- TÍNH TỔNG SỐ ĐƠN HÀNG VÀ TỔNG SỐ TIỀN NHÂN ĐƯỢC CỦA THÁNG
+DROP PROCEDURE IF EXISTS GetMonthlyRevenue $$
+CREATE PROCEDURE GetMonthlyRevenue(IN targetMonth INT, IN targetYear INT)
+BEGIN
+    SELECT
+        MONTH(o.orderTime) AS Month,
+        COUNT(DISTINCT o.orderID) AS TotalOrders,
+        SUM(od.finalPrice) AS MonthlyRevenue
+    FROM orders o
+    JOIN order_detail od ON o.orderID = od.orderID
+    WHERE YEAR(o.orderTime) = targetYear AND MONTH(o.orderTime) = targetMonth
+    GROUP BY Month;
 END $$
 
 -- XUẤT HÓA ĐƠN
@@ -89,21 +104,46 @@ BEGIN
         o.orderID AS OrderID,
         CASE 
             WHEN od.serviceID = 0 THEN pmo.name
-            ELSE sd.description
+            ELSE s.name
         END AS ItemName,
         o.orderTime AS OrderTime,
         od.originalPrice AS OriginalPrice,
         od.finalPrice AS FinalPrice,
         p.name AS DiscountName
     FROM orders o
-    JOIN order_detail od ON o.orderID = od.orderID -- MAI CHECK LOGIC JOIN TÙM LUM
-    JOIN phone ph on ph.orderID = od.orderID
+    JOIN order_detail od ON o.orderID = od.orderID
+    JOIN phone ph on ph.phoneID = od.phoneID
     LEFT JOIN phone_model_option pmo ON ph.phoneModelOptionID = pmo.phoneModelOptionID
-    LEFT JOIN service_detail sd ON od.serviceID = sd.serviceID
+    LEFT JOIN services s ON od.serviceID = s.serviceID
     LEFT JOIN promotion p ON od.promotionID = p.promotionID
     WHERE o.orderID = orderID;
 END $$
 
+-- TỔNG SỐ TIỀN PHẢI THANH TOÁN
+DROP PROCEDURE IF EXISTS TotalMoneyCustomerHaveToPay $$
+CREATE PROCEDURE TotalMoneyCustomerHaveToPay(IN orderID INT)
+BEGIN
+    SELECT
+        o.orderID AS OrderID,
+		u1.fullName AS EmployeeName,
+        u2.fullName AS CustomerName,
+        sto.name AS StoreName,
+        sto.address AS StoreAdress,
+        o.orderTime AS OrderTime,
+        SUM(od.originalPrice) AS OriginalPrice,
+        SUM(od.finalPrice) AS FinalPrice,
+        SUM(od.originalPrice) - SUM(od.finalPrice) AS TotalMoneySaved 
+    FROM orders o
+    JOIN store sto on sto.storeID = o.FromStoreID
+	JOIN users u1 on u1.userID = o.employeeID
+    JOIN users u2 on u2.userID = o.userID
+    JOIN order_detail od ON o.orderID = od.orderID
+    GROUP BY o.orderID
+    HAVING o.orderID = orderID;
+END $$
 DELIMITER ;
 
-CALL ExportInvoice(1);
+CALL GetMonthlyRevenue(2,2023);
+CALL ListMonthlyRevenue(2,2023);
+CALL TotalMoneyCustomerHaveToPay(3);
+CALL ExportInvoice(3);
