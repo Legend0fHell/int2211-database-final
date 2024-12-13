@@ -177,7 +177,7 @@ BEGIN
         -- Cập nhật trạng thái điện thoại thành 'InStore'
         UPDATE phone
         SET status = 'InStore'
-        WHERE phoneID = OLD.phoneID;
+        WHERE phoneID IN (SELECT phoneID FROM order_detail WHERE orderID = OLD.orderID);
     END IF;
 END $$
 
