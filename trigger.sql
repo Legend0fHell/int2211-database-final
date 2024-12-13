@@ -16,11 +16,19 @@ BEGIN
     );
 END $$
 
+-- TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG KHI ĐÃ GIAO
+drop trigger if exists after_update_shipped_time $$
+create trigger after_update_shipped_time
+after update on orders
+for each row
+begin
+	if new.shippedTime is not null then
+		update orders
+		set status = 'Completed'
+		where orderID = new.orderID;
+    end if;
+end $$
 
-
-DELIMITER $$
-
--- TỰ ĐỘNG KÍCH HOẠT BẢO HÀNH CHO SẢN PHẨM MỚI MUA
 -- TỰ ĐỘNG KÍCH HOẠT BẢO HÀNH CHO SẢN PHẨM MỚI MUA
 DROP TRIGGER IF EXISTS after_update_order_status $$
 
@@ -39,7 +47,7 @@ BEGIN
         SELECT od.phoneID, od.serviceID 
         FROM order_detail od
         INNER JOIN services s ON od.serviceID = s.serviceID
-        WHERE od.orderID = NEW.orderID AND s.serviceTypeID = 1;  
+        WHERE od.orderID = NEW.orderID AND s.serviceTypeID = 1 limit 1;  
 
     -- Handler để xử lý khi con trỏ duyệt hết dữ liệu 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;  
@@ -73,6 +81,32 @@ BEGIN
         CLOSE cur_order_details;
     END IF;
 END $$
+
+
+-- kIỂM TRA SÓ LƯỢNG HÀNG TRƯỚC KHI THÊM VÀO BẢNG ORDER_DETAIL
+DROP TRIGGER IF EXISTS before_insert_order_detail $$
+CREATE TRIGGER before_insert_order_detail
+BEFORE INSERT ON order_detail
+FOR EACH ROW
+BEGIN
+    DECLARE available_in_stock INT;
+
+    -- Kiểm tra số lượng tồn kho trong một truy vấn duy nhất
+    SELECT COUNT(*)
+    INTO available_in_stock
+    FROM phone
+    WHERE phoneID = NEW.phoneID
+      AND phoneModelID = (SELECT phoneModelID FROM phone WHERE phoneID = NEW.phoneID)
+      AND phoneModelOptionID = (SELECT phoneModelOptionID FROM phone WHERE phoneID = NEW.phoneID)
+      AND status = 'InStore';
+
+    -- Nếu không còn tồn kho, phát tín hiệu lỗi
+    IF available_in_stock = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'The selected phone model and option are out of stock.';
+    END IF;
+END $$
+DELIMITER ;
 
 
 
