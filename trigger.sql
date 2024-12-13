@@ -21,6 +21,7 @@ END $$
 DELIMITER $$
 
 -- TỰ ĐỘNG KÍCH HOẠT BẢO HÀNH CHO SẢN PHẨM MỚI MUA
+-- TỰ ĐỘNG KÍCH HOẠT BẢO HÀNH CHO SẢN PHẨM MỚI MUA
 DROP TRIGGER IF EXISTS after_update_order_status $$
 
 CREATE TRIGGER after_update_order_status 
@@ -30,19 +31,18 @@ BEGIN
     -- Khai báo các biến 
     DECLARE v_phoneID INT;
     DECLARE v_serviceID INT;
-    DECLARE v_serviceTypeID INT;
     DECLARE v_warrantyDuration INT;
     DECLARE done INT DEFAULT 0;
 
-    
     -- Con trỏ để duyệt qua từng dòng của bảng order_detail
     DECLARE cur_order_details CURSOR FOR 
-        SELECT phoneID, serviceID 
-        FROM order_detail
-        WHERE orderID = NEW.orderID;  
+        SELECT od.phoneID, od.serviceID 
+        FROM order_detail od
+        INNER JOIN services s ON od.serviceID = s.serviceID
+        WHERE od.orderID = NEW.orderID AND s.serviceTypeID = 1;  
+
     -- Handler để xử lý khi con trỏ duyệt hết dữ liệu 
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;  
-
 
     -- Kiểm tra đơn hàng đã được hoàn tất chưa 
     IF NEW.status = 'Completed' AND OLD.status != 'Completed' THEN
@@ -58,24 +58,15 @@ BEGIN
                 LEAVE read_order_details; 
             END IF;
 
-            -- Kiểm tra serviceTypeID trong bảng services 
-            SELECT serviceTypeID INTO v_serviceTypeID 
-            FROM services
-            WHERE serviceID = v_serviceID;
+            -- Lấy thời gian bảo hành từ bảng warranty
+            SELECT warrantyDuration INTO v_warrantyDuration 
+            FROM warranty 
+            WHERE warrantyID = v_serviceID;
 
-            -- Chỉ bảo hành nếu serviceTypeID = 1
-            IF v_serviceTypeID = 1 THEN 
-                -- Lấy thời gian bảo hành từ bảng warranty
-                SELECT warrantyDuration INTO v_warrantyDuration 
-                FROM warranty 
-                WHERE warrantyID = v_serviceID;
-
-                -- Cập nhật thời gian bảo hành cho phone 
-                UPDATE phone 
-                SET warrantyUntil = DATE_ADD(NEW.shippedTime, INTERVAL v_warrantyDuration DAY)
-                WHERE phoneID = v_phoneID;
-            END IF;
-
+            -- Cập nhật thời gian bảo hành cho phone 
+            UPDATE phone 
+            SET warrantyUntil = DATE_ADD(NEW.shippedTime, INTERVAL v_warrantyDuration DAY)
+            WHERE phoneID = v_phoneID;
         END LOOP;
 
         -- Đóng con trỏ
