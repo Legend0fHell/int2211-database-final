@@ -10,7 +10,6 @@ CREATE TABLE phone_model (
   countSold INT NOT NULL,
   warrantyID INT,
   articleID INT,
-  previewImgURL VARCHAR(100),
   PRIMARY KEY (phoneModelID)
 );
 
@@ -19,7 +18,8 @@ CREATE TABLE phone_model_option (
   phoneModelID INT NOT NULL,
   price INT NOT NULL,
   name VARCHAR(100) NOT NULL,
-  hexColorID INT,
+  colorHex INT,
+  colorName VARCHAR(20),
   PRIMARY KEY (phoneModelOptionID)
 );
 
@@ -27,7 +27,7 @@ CREATE TABLE phone_tech_spec (
   phoneModelOptionID INT NOT NULL,
   techSpecID INT NOT NULL,
   infoText VARCHAR(100),
-  infoNum DECIMAL(10,2),
+  infoNum DECIMAL(10,3),
   PRIMARY KEY (phoneModelOptionID, techSpecID)
 );
 
@@ -43,12 +43,6 @@ CREATE TABLE manufacturer (
   name VARCHAR(15) NOT NULL,
   description TEXT,
   PRIMARY KEY (manufacturerID)
-);
-
-CREATE TABLE color (
-  hexColorID INT NOT NULL,
-  name VARCHAR(20) NOT NULL,
-  PRIMARY KEY (hexColorID)
 );
 
 CREATE TABLE warranty (
@@ -70,7 +64,7 @@ CREATE TABLE phone_review (
   phoneModelID INT NOT NULL,
   phoneModelOptionID INT,
   userID INT NOT NULL,
-  rating DECIMAL(1,0) NOT NULL,
+  rating DECIMAL(3,2) NOT NULL,
   likes INT NOT NULL,
   timePosted DATETIME NOT NULL,
   PRIMARY KEY (reviewID)
@@ -130,12 +124,6 @@ CREATE TABLE services (
   name VARCHAR(50) NOT NULL,
   price INT NOT NULL,
   serviceTypeID INT NOT NULL,
-  PRIMARY KEY (serviceID)
-);
-
-CREATE TABLE service_detail (
-  serviceID INT NOT NULL,
-  description TEXT,
   PRIMARY KEY (serviceID)
 );
 

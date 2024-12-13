@@ -6,8 +6,7 @@ ADD FOREIGN KEY (warrantyID) REFERENCES warranty(warrantyID),
 ADD FOREIGN KEY (articleID) REFERENCES article(articleID);
 
 ALTER TABLE phone_model_option
-ADD FOREIGN KEY (phoneModelID) REFERENCES phone_model(phoneModelID),
-ADD FOREIGN KEY (hexColorID) REFERENCES color(hexColorID);
+ADD FOREIGN KEY (phoneModelID) REFERENCES phone_model(phoneModelID);
 
 ALTER TABLE phone_tech_spec
 ADD FOREIGN KEY (phoneModelOptionID) REFERENCES phone_model_option(phoneModelOptionID),
@@ -37,9 +36,6 @@ ADD FOREIGN KEY (provinceID) REFERENCES province(provinceID);
 
 ALTER TABLE services
 ADD FOREIGN KEY (serviceTypeID) REFERENCES service_type(serviceTypeID);
-
-ALTER TABLE service_detail
-ADD FOREIGN KEY (serviceID) REFERENCES services(serviceID);
 
 ALTER TABLE users
 ADD FOREIGN KEY (provinceID) REFERENCES province(provinceID),
@@ -72,6 +68,10 @@ ALTER TABLE phone_model
 ALTER COLUMN countView SET DEFAULT 0,
 ALTER COLUMN countSold SET DEFAULT 0;
 
+ALTER TABLE phone_model_option
+ALTER COLUMN colorHex SET DEFAULT 0,
+ALTER COLUMN colorName SET DEFAULT 'Black';
+
 ALTER TABLE orders
 ALTER COLUMN status SET DEFAULT 'Pending';
 
@@ -94,9 +94,6 @@ ADD INDEX idx_techSpecID (techSpecID);
 
 ALTER TABLE manufacturer
 ADD INDEX idx_manufacturerID (manufacturerID);
-
-ALTER TABLE color
-ADD INDEX idx_hexColorID (hexColorID);
 
 ALTER TABLE warranty
 ADD INDEX idx_warrantyID (warrantyID);
