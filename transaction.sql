@@ -182,6 +182,48 @@ BEGIN
     COMMIT;
 END $$
 
+-- THEO DÕI SỐ LƯỢNG TỔN KHO CỦA TỪNG MẪU ĐIỆN THOẠI Ở MỖI CỦA HÀNG
+drop procedure if exists checkStockLevel $$
+create procedure checkStockLevel(in phoneModelID int)
+begin
+    select pm.name as PhoneModel, 
+           s.name as StoreName, 
+           count(p.phoneID) as StockLevel
+    from phone p
+    join phone_model pm on p.phoneModelID = pm.phoneModelID
+    join store s on p.inStoreID = s.storeID
+    where pm.phoneModelID = phoneModelID 
+      and p.status = 'InStore'
+    group by pm.name, s.name;
+end $$
+
+-- QUẢN LÝ SỐ LƯỢNG ĐƯỢC BÁN RA CỦA TỪNG MẪU ĐIỆN THOẠI
+drop procedure if exists checkSoldLevel $$
+create procedure checkSoldLevel(in phoneModelID int)
+begin
+    select pm.name as PhoneModel, 
+           count(distinct od.orderID) as TotalOrders, 
+           sum(od.quantity) as TotalSold
+    from phone_model pm
+    join phone p on pm.phoneModelID = p.phoneModelID
+    join order_detail od on p.phoneID = od.phoneID
+    where pm.phoneModelID = phoneModelID
+    group by pm.name;
+end $$
+
+
+-- lỊCH SỬ MUA HÀNG CỦA KHÁCH HÀNG
+drop procedure if exists checkOrderHistory $$
+create procedure checkOrderHistory(in userID int)
+begin
+    SELECT o.userID, u.fullName, o.orderID, o.orderTime, o.status, o.shippedTime, SUM(od.finalPrice) AS TotalPrice
+    FROM 
+        orders o
+    JOIN order_detail od ON o.orderID = od.orderID
+    JOIN users u ON u.userID = o.userID
+    WHERE o.userID = 21
+    GROUP BY o.orderID;
+    end $$
 
 DELIMITER ;
 
