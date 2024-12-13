@@ -134,6 +134,52 @@ BEGIN
     END IF;
 END$$
 
+-- KIỂM TRA NGÀY GIAO HÀNG KHÔNG ĐƯỢC TRƯỚC NGÀY ĐẶT HÀNG
+
+DROP TRIGGER IF EXISTS before_update_shipped_time $$
+
+CREATE TRIGGER before_update_shipped_time
+BEFORE UPDATE ON orders
+FOR EACH ROW
+BEGIN
+    IF NEW.shippedTime < OLD.orderTime THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Shipped time cannot be earlier than order time.';
+    END IF;
+END $$
+
+-- TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI SẢN PHẨM KHI CÓ ĐƠN ĐẶT HÀNG
+DROP TRIGGER IF EXISTS after_insert_order_detail $$
+
+CREATE TRIGGER after_insert_order_detail 
+AFTER INSERT ON order_detail
+FOR EACH ROW
+BEGIN
+    -- Cập nhật trạng thái sản phẩm thành 'Active'
+    UPDATE phone
+    SET status = 'Active'
+    WHERE phoneID = NEW.phoneID;
+END $$
+
+
+-- TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI ĐIỆN THOẠI KHI ĐƠN HÀNG BỊ HUỶ
+DROP TRIGGER IF EXISTS after_delete_order_detail $$
+CREATE TRIGGER after_delete_order_detail
+AFTER DELETE ON order_detail
+FOR EACH ROW
+BEGIN
+    -- Kiểm tra xem điện thoại đã bị hủy đơn hàng chưa
+    IF NOT EXISTS (
+        SELECT 1
+        FROM order_detail
+        WHERE phoneID = OLD.phoneID
+    ) THEN
+        -- Cập nhật trạng thái điện thoại thành 'InStore'
+        UPDATE phone
+        SET status = 'InStore'
+        WHERE phoneID = OLD.phoneID;
+    END IF;
+END $$
 
 
 DELIMITER ;
