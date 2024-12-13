@@ -16,47 +16,27 @@ BEGIN
     );
 END $$
 
--- CẬP NHẬT GIÁ TIỀN ĐIỆN THOẠI NẾU NHƯ CÓ THÔNG TIN DISCOUNT MỚI
-DROP TRIGGER IF EXISTS CalculateDiscountPrice $$
 
-CREATE TRIGGER CalculateDiscountPrice
-BEFORE INSERT ON order_detail
-FOR EACH ROW
-BEGIN
-    DECLARE discountPercent DECIMAL(4,2);
-    DECLARE discountFixed INT;
-    DECLARE fixedNewPrice INT;
-
-    -- Lấy thông tin giảm giá từ bảng promotion_detail_phone
-    SELECT p.discountPercent, p.discountFixed, p.fixedNewPrice
-    INTO discountPercent, discountFixed, fixedNewPrice
-    FROM promotion_detail_phone p
-    WHERE p.promotionID = NEW.promotionID 
-      AND p.phoneModelID = (
-        SELECT phoneModelID
-        FROM phone
-        WHERE phoneID = NEW.phoneID
-      )
-      AND p.phoneModelOptionID = (
-        SELECT phoneModelOptionID
-        FROM phone
-        WHERE phoneID = NEW.phoneID
-      )
-    LIMIT 1;
-
-    -- Tính toán giá trị finalPrice dựa trên thông tin giảm giá
-    IF fixedNewPrice IS NOT NULL THEN
-        SET NEW.finalPrice = fixedNewPrice;
-    ELSEIF discountPercent IS NOT NULL THEN
-        SET NEW.finalPrice = NEW.originalPrice - (NEW.originalPrice * discountPercent / 100);
-    ELSEIF discountFixed IS NOT NULL THEN
-        SET NEW.finalPrice = NEW.originalPrice - discountFixed;
-    ELSE
-        SET NEW.finalPrice = NEW.originalPrice; -- Không có giảm giá
-    END IF;
-END $$
 
 -- TỰ ĐỘNG KÍCH HOẠT BẢO HÀNH CHO SẢN PHẨM MỚI MUA
+DROP TRIGGER IF EXISTS after_order_detail_insert $$
+CREATE TRIGGER after_order_detail_insert
+AFTER INSERT ON order_detail
+FOR EACH ROW
+BEGIN
+    -- Lấy ngày hiện tại
+    DECLARE v_current_date DATE;
+    SET v_current_date = CURDATE();
+
+    -- Lấy ngày hết hạn bảo hành
+    DECLARE v_warranty_end_date DATE;
+    SET v_warranty_end_date = DATE_ADD(v_current_date, INTERVAL 12 MONTH);
+
+    -- Thêm bảo hành cho sản phẩm
+    INSERT INTO warranty
+    VALUES (NEW.orderDetailID, v_current_date, v_warranty_end_date);
+END $$
+
 
 -- KIỂM TRA DỮ LIỆU TRƯỚC KHI THÊM VÀO BẢNG ORDERS
 DROP TRIGGER IF EXISTS before_insert_orders $$

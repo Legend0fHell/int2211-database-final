@@ -141,9 +141,133 @@ BEGIN
     GROUP BY o.orderID
     HAVING o.orderID = orderID;
 END $$
+
+
+-- THÊM THÔNG TIN VÀO BẢNG order_detail, TỰ ĐỘNG TÍNH GIÁ VÀ GIÁ CUỐI
+DROP PROCEDURE IF EXISTS AddOrderDetail
+$$
+CREATE PROCEDURE AddOrderDetail(
+    IN p_orderID INT, 
+    IN p_phoneID INT, 
+    IN p_serviceID INT, 
+    IN p_promotionID INT
+)
+BEGIN
+    -- Khai báo biến
+    DECLARE v_original_price INT; 
+    DECLARE v_final_price INT; 
+
+    DECLARE v_original_service_price INT;
+    DECLARE v_final_service_price INT;
+
+    DECLARE v_discount_percentage DECIMAL(4,2);
+    DECLARE v_discount_fixed INT;
+    DECLARE v_fixed_new_price INT;
+
+    DECLARE v_phone_model_id INT;
+    DECLARE v_phone_model_option_id INT;
+
+    DECLARE v_service_type_id INT;
+
+    DECLARE v_start_promotion_date DATE;
+    DECLARE v_end_promotion_date DATE;
+    DECLARE v_order_time DATE;
+
+
+    # Lấy thời gian đặt hàng
+    select orderTime into v_order_time from orders where orderID = p_orderID;
+    # Lấy thời gian khuyến mãi
+    select startDate, endDate into v_start_promotion_date, v_end_promotion_date 
+    from promotion 
+    where promotionID = p_promotionID;
+
+    -- 1. Lấy giá gốc của điện thoại
+    SELECT COALESCE(customPrice, (
+               SELECT price 
+               FROM phone_model_option 
+               WHERE phone_model_option.phoneModelOptionID = phone.phoneModelOptionID
+           )), 
+           phoneModelID, 
+           phoneModelOptionID
+    INTO v_original_price, v_phone_model_id, v_phone_model_option_id
+    FROM phone 
+    WHERE phoneID = p_phoneID;
+
+    -- 2. Xử lý khuyến mãi điện thoại
+    SELECT discountPercent, discountFixed, fixedNewPrice
+    INTO v_discount_percentage, v_discount_fixed, v_fixed_new_price
+    FROM promotion_detail_phone
+    WHERE promotionID = p_promotionID
+      AND (phoneModelID = 0 OR phoneModelID = v_phone_model_id)
+      AND (phoneModelOptionID = 0 OR phoneModelOptionID = v_phone_model_option_id);
+
+    -- Tính giá cuối cùng cho điện thoại
+    IF v_fixed_new_price IS NOT NULL THEN
+        SET v_final_price = v_fixed_new_price;
+    ELSEIF v_discount_percentage IS NOT NULL THEN
+        SET v_final_price = v_original_price * (1 - (v_discount_percentage / 100));
+    ELSEIF v_discount_fixed IS NOT NULL THEN
+        SET v_final_price = GREATEST(0, v_original_price - v_discount_fixed);
+    ELSE
+        SET v_final_price = v_original_price;
+
+    END IF;
+
+
+    -- 3. Kiểm tra và xử lý khuyến mãi dịch vụ
+    SELECT price, serviceTypeID
+    INTO v_original_service_price, v_service_type_id
+    FROM services
+    WHERE serviceID = p_serviceID;
+
+    -- Nếu promotionID không có trong bảng dịch vụ, giữ nguyên giá gốc
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM promotion_detail_service 
+        WHERE promotionID = p_promotionID
+    ) THEN
+        SET v_final_service_price = v_original_service_price;
+    ELSE
+        SELECT discountPercent, discountFixed, fixedNewPrice
+        INTO v_discount_percentage, v_discount_fixed, v_fixed_new_price
+        FROM promotion_detail_service
+        WHERE promotionID = p_promotionID 
+          AND serviceTypeID = v_service_type_id
+        LIMIT 1;
+
+        -- Tính giá cuối cùng cho dịch vụ
+        IF v_discount_percentage IS NOT NULL THEN
+            SET v_final_service_price = v_original_service_price * (1 - v_discount_percentage / 100);
+        ELSEIF v_discount_fixed IS NOT NULL THEN
+            SET v_final_service_price = GREATEST(0, v_original_service_price - v_discount_fixed);
+        ELSEIF v_fixed_new_price IS NOT NULL THEN
+            SET v_final_service_price = v_fixed_new_price;
+		ELSE set v_final_service_price = v_original_service_price;
+        END IF;
+    END IF;
+
+        # So sánh thời gian đặt hàng và thời gian khuyến mãi
+        if v_order_time < v_start_promotion_date or v_order_time > v_end_promotion_date then
+            set v_final_price = v_original_price;
+            set v_final_service_price = v_original_service_price;
+        end if;
+
+    -- Tổng giá cuối cùng
+    SET v_final_price = v_final_price + v_final_service_price;
+
+    -- 4. Thêm thông tin vào bảng order_detail
+
+
+    INSERT INTO order_detail(orderID, phoneID, serviceID, promotionID, originalPrice, finalPrice)
+    VALUES (p_orderID, p_phoneID, p_serviceID, p_promotionID, v_original_price, v_final_price);
+
+END $$
+
+
 DELIMITER ;
 
 CALL GetMonthlyRevenue(2,2023);
 CALL ListMonthlyRevenue(2,2023);
 CALL TotalMoneyCustomerHaveToPay(3);
 CALL ExportInvoice(3);
+CALL AddOrderDetail(27, 1065, 1, 1);
