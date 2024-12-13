@@ -1,8 +1,6 @@
 DELIMITER $$
 
--- QUẢN LÝ SẢN PHẨM
-
--- LỌC SẢN PHẨM THEO MANUFACTURER
+-- 1. LỌC SẢN PHẨM THEO MANUFACTURER
 DROP PROCEDURE IF EXISTS GetPhonesByManufacturer $$
 CREATE PROCEDURE GetPhonesByManufacturer(IN manufacturerName VARCHAR(50))
 BEGIN
@@ -16,7 +14,7 @@ BEGIN
     WHERE mf.name = manufacturerName;
 END $$
 
--- LỌC SẢN PHẨM THEO GIÁ TIỀN
+-- 1. LỌC SẢN PHẨM THEO GIÁ TIỀN
 DROP PROCEDURE IF EXISTS GetPhonesByPrice $$
 CREATE PROCEDURE GetPhonesByPrice(IN minPrice INT, IN maxPrice INT)
 BEGIN
@@ -32,7 +30,41 @@ BEGIN
     ORDER BY pmo.price ASC;
 END $$
 
--- ĐỀ XUẤT CÁC SẢN PHẨM TƯƠNG TỰ DỰA TRÊN ID VỚI PHONE CONDITION KHÁC NHAU
+-- 3. LỌC SẢN PHẨM THEO TECH_SPEC
+DROP PROCEDURE IF EXISTS GetPhonesByTechSpec $$
+CREATE PROCEDURE GetPhonesByTechSpec(IN techSpecID INT)
+BEGIN
+    SELECT
+        CONCAT(pmo.name, ' ', pts.infoText) AS PhoneName,
+        pmo.price AS Price,
+        mf.name AS Manufacturer
+    FROM phone_model_option pmo
+    JOIN phone_model pm ON pmo.phoneModelID = pm.phoneModelID
+    JOIN manufacturer mf ON pm.manufacturerID = mf.manufacturerID
+    JOIN phone_tech_spec pts ON pmo.phoneModeloptionID = pts.phoneModeloptionID
+    WHERE pts.techSpecID = techSpecID;
+END $$
+
+
+-- 4. ĐỀ XUẤT SẢN PHẨM BÁN CHẠY THEO THÁNG
+DROP PROCEDURE IF EXISTS GetBestSellingPhonesByMonth $$
+CREATE PROCEDURE GetBestSellingPhonesByMonth(IN targetMonth INT, IN targetYear INT)
+BEGIN
+    SELECT 
+        pm.name AS PhoneModel, 
+        COUNT(DISTINCT(CONCAT(od.orderID, '-' , od.phoneID))) AS TotalSold
+    FROM phone_model pm
+    JOIN phone p ON p.phoneModelID = pm.phoneModelID
+    JOIN order_detail od ON p.phoneID = od.phoneID
+    JOIN orders o ON od.orderID = o.orderID
+    WHERE MONTH(o.orderTime) = targetMonth AND YEAR(o.orderTime) = targetYear
+    GROUP BY pm.phoneModelID
+    ORDER BY TotalSold DESC
+    LIMIT 5;
+END $$
+
+
+-- 5. ĐỀ XUẤT CÁC SẢN PHẨM TƯƠNG TỰ DỰA TRÊN ID VỚI PHONE CONDITION KHÁC NHAU
 DROP PROCEDURE IF EXISTS GetSimilarPhones $$
 CREATE PROCEDURE GetSimilarPhones(IN phoneID INT)
 BEGIN
@@ -45,10 +77,25 @@ BEGIN
 		WHERE p1.phoneID = phoneID);
 END $$
 
+-- 6. CHECK BẢO HÀNH CÒN KHẢ DỤNG KHÔNG
+DROP PROCEDURE IF EXISTS CheckWarranty $$
+CREATE PROCEDURE CheckWarranty(IN phoneID INT, IN currentDate DATE)
+BEGIN
+    SELECT
+        p.phoneID,
+        p.phoneCondition,
+        p.warrantyID,
+        p.warrantyUntil,
+        CASE
+            WHEN p.warrantyUntil >= currentDate THEN 'Valid'
+            ELSE 'Expired'
+        END AS WarrantyStatus
+    FROM phone p
+    WHERE p.phoneID = phoneID;
+END $$
 
 
-
--- TÌM KIẾM ĐỊA CHỈ GẦN NGƯỜI DÙNG NHẤT
+-- 7. TÌM KIẾM ĐỊA CHỈ GẦN NGƯỜI DÙNG NHẤT
 DROP PROCEDURE IF EXISTS GetNearbyStores $$
 CREATE PROCEDURE GetNearbyStores(IN userLongitude DECIMAL(10, 5), IN userLatitude DECIMAL(10, 5))
 BEGIN
@@ -63,8 +110,7 @@ BEGIN
 END $$
 
 
-
--- THỐNG KÊ CHI TIẾT DOANH THU HÀNG THÁNG
+-- 8. THỐNG KÊ CHI TIẾT DOANH THU HÀNG THÁNG
 DROP PROCEDURE IF EXISTS ListMonthlyRevenue $$
 CREATE PROCEDURE ListMonthlyRevenue(IN targetMonth INT, IN targetYear INT)
 BEGIN
@@ -79,7 +125,7 @@ BEGIN
     ORDER BY OrderDate;
 END $$
 
--- TÍNH TỔNG SỐ ĐƠN HÀNG VÀ TỔNG SỐ TIỀN NHÂN ĐƯỢC CỦA THÁNG
+-- 9. TÍNH TỔNG SỐ ĐƠN HÀNG VÀ TỔNG SỐ TIỀN NHÂN ĐƯỢC CỦA THÁNG
 DROP PROCEDURE IF EXISTS GetMonthlyRevenue $$
 CREATE PROCEDURE GetMonthlyRevenue(IN targetMonth INT, IN targetYear INT)
 BEGIN
@@ -93,7 +139,7 @@ BEGIN
     GROUP BY Month;
 END $$
 
--- XUẤT HÓA ĐƠN
+-- 10. XUẤT HÓA ĐƠN
 DROP PROCEDURE IF EXISTS ExportInvoice $$
 CREATE PROCEDURE ExportInvoice(IN orderID INT)
 BEGIN
@@ -116,7 +162,7 @@ BEGIN
     WHERE o.orderID = orderID;
 END $$
 
--- TỔNG SỐ TIỀN PHẢI THANH TOÁN
+-- 11. TỔNG SỐ TIỀN PHẢI THANH TOÁN
 DROP PROCEDURE IF EXISTS TotalMoneyCustomerHaveToPay $$
 CREATE PROCEDURE TotalMoneyCustomerHaveToPay(IN orderID INT)
 BEGIN
@@ -139,7 +185,19 @@ BEGIN
     HAVING o.orderID = orderID;
 END $$
 
--- THÊM THÔNG TIN VÀO BẢNG order_detail, TÍNH GIÁ GỐC VÀ GIÁ CUỐI CÙNG
+-- 12. THAY ĐỔI INSTOREID CỦA PHONE THÀNH FROMSTOREID CỦA ORDERS NẾU SẢN PHẨM ĐÃ ĐƯỢC GIAO ĐẾN CỬA HÀNG
+DROP PROCEDURE IF EXISTS UpdateInStoreIDToFromStoreID $$
+CREATE PROCEDURE UpdateInStoreIDToFromStoreID(IN orderID INT)
+BEGIN
+    UPDATE phone p
+    JOIN order_detail od ON p.phoneID = od.phoneID
+    JOIN orders o ON od.orderID = o.orderID
+    SET p.INStoreID = o.FromStoreID
+    WHERE o.orderID = orderID;  
+END $$
+
+
+-- 13. THÊM THÔNG TIN VÀO BẢNG order_detail, TÍNH GIÁ GỐC VÀ GIÁ CUỐI CÙNG
 DROP PROCEDURE IF EXISTS AddOrderDetail
 $$
 CREATE PROCEDURE AddOrderDetail(
@@ -265,3 +323,8 @@ CALL ExportInvoice(3);
 CALL AddOrderDetail(27, 1090, 1, 1);
 select * from order_detail
 where orderID = 27 and phoneID = 1090;
+CALL GetBestSellingPhonesByMonth(2, 2023);
+CALL CheckWarranty(1, '2023-09-27');
+CALL UpdateInStoreIDToFromStoreID(49);
+CALL GetPhonesByTechSpec(2);
+CALL GetPhonesByPrice(2000000, 13000000);
