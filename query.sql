@@ -13,7 +13,7 @@ LEFT OUTER JOIN
 LEFT OUTER JOIN 
     promotion p ON pdp.promotionID = p.promotionID;
 
--- Lấy danh sách tất cả các điện thoại có số lượng bán > 50 máy
+-- Lấy danh sách tất cả các điện thoại có số lượng bán > 50
 SELECT 
     pm.name AS PhoneModelName,
     COUNT(od.phoneID) AS TotalSold
@@ -101,30 +101,5 @@ FROM
 WHERE 
     pmo.price > (SELECT AVG(price) FROM phone_model_option);
 
--- Tính tổng số lượng bán ra cho từng nhà sản xuất dựa trên bảng tạm thời được tạo từ phone_model sử dụng subquery.
-SELECT 
-    mf.name AS ManufacturerName,
-    SUM(temp.countSold) AS TotalSold
-FROM
-    (SELECT manufacturerID, countSold FROM phone_model) temp
-INNER JOIN
-    manufacturer mf ON temp.manufacturerID = mf.manufacturerID
-GROUP BY
-    mf.name;
-
--- Lấy tổng doanh thu của từng cửa hàng từ bảng orders và order_detail sử dụng group by và hàm tổng hợp.
-SELECT 
-    s.name AS StoreName,
-    SUM(od.finalPrice) AS TotalRevenue
-FROM
-    orders o
-INNER JOIN
-    order_detail od ON o.orderID = od.orderID
-INNER JOIN
-    store s ON o.fromStoreID = s.storeID
-GROUP BY
-    s.name
-ORDER BY
-    TotalRevenue DESC;
 
     
