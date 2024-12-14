@@ -91,3 +91,40 @@ ORDER BY
 -- TRÍCH XUẤT THÔNG TIN CỦA CÁC BÀI VIẾT
 SELECT articleID, content
 FROM article;
+
+-- Lấy danh sách các điện thoại có giá lớn hơn mức giá trung bình sử dụng where.
+SELECT 
+    pmo.name AS PhoneOptionName,
+    pmo.price AS Price
+FROM
+    phone_model_option pmo
+WHERE 
+    pmo.price > (SELECT AVG(price) FROM phone_model_option);
+
+-- Tính tổng số lượng bán ra cho từng nhà sản xuất dựa trên bảng tạm thời được tạo từ phone_model sử dụng subquery.
+SELECT 
+    mf.name AS ManufacturerName,
+    SUM(temp.countSold) AS TotalSold
+FROM
+    (SELECT manufacturerID, countSold FROM phone_model) temp
+INNER JOIN
+    manufacturer mf ON temp.manufacturerID = mf.manufacturerID
+GROUP BY
+    mf.name;
+
+-- Lấy tổng doanh thu của từng cửa hàng từ bảng orders và order_detail sử dụng group by và hàm tổng hợp.
+SELECT 
+    s.name AS StoreName,
+    SUM(od.finalPrice) AS TotalRevenue
+FROM
+    orders o
+INNER JOIN
+    order_detail od ON o.orderID = od.orderID
+INNER JOIN
+    store s ON o.fromStoreID = s.storeID
+GROUP BY
+    s.name
+ORDER BY
+    TotalRevenue DESC;
+
+    
