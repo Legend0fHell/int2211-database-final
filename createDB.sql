@@ -154,7 +154,7 @@ CREATE TABLE orders (
   status ENUM('Pending', 'Preparing', 'Delivering', 'Completed', 'Cancelled') NOT NULL,
   comment TEXT,
   userID INT NOT NULL,
-  fromStoreID INT,
+  fromStoreID INT NOT NULL,
   employeeID INT,
   PRIMARY KEY (orderID)
 );
