@@ -16,7 +16,6 @@ CREATE PROCEDURE UpdateUser(
 BEGIN
     -- Bắt đầu giao dịch
     START TRANSACTION;
-
     BEGIN
         -- Cập nhật thông tin người dùng
         UPDATE users
@@ -55,22 +54,15 @@ CREATE PROCEDURE UpdatePhone(
 BEGIN
     -- Bắt đầu giao dịch
     START TRANSACTION;
-
     BEGIN
         -- Cập nhật thông tin điện thoại
         UPDATE phone
-        SET ownedByUserID = ownedByUserID,
-            warrantyID = warrantyID,
-            inStoreID = inStoreID,
-            phoneModelID = phoneModelID,
-            phoneModelOptionID = phoneModelOptionID,
-            phoneCondition = phoneCondition,
-            customPrice = customPrice,
-            imei = imei,
-            status = status,
-            warrantyUntil = warrantyUntil
+        SET ownedByUserID = ownedByUserID, warrantyID = warrantyID, 
+            inStoreID = inStoreID, phoneModelID = phoneModelID,
+            phoneModelOptionID = phoneModelOptionID, 
+            phoneCondition = phoneCondition, customPrice = customPrice,
+            imei = imei, status = status, warrantyUntil = warrantyUntil
         WHERE phoneID = phoneID;
-
         -- Kiểm tra nếu cập nhật không thành công
         IF ROW_COUNT() = 0 THEN
             ROLLBACK;
@@ -207,27 +199,42 @@ BEGIN
     -- Hoàn thành giao dịch
     COMMIT;
 END $$
-
 DELIMITER ;
 
 SET SQL_SAFE_UPDATES = 0;
-
-CALL InsertUser(
-    NULL, -- userID (NULL để AUTO_INCREMENT nếu userID là tự động)
+-- 1. Gọi stored procedure UpdateUser
+CALL UpdateUser(
+    1, -- userID
     'Nguyen Van A', -- fullName
-    'example@gmail.com', -- email
-    '0912345678', -- phone
-    '123 Example Street', -- address
-    5, -- provinceID
+    'nguyenvana@example.com', -- email
+    '0123456789', -- phone
+    '123 Street, City', -- address
+    NULL, -- provinceID
     NULL, -- districtID
     'Customer', -- role
-    23 -- storeID (NULL nếu không liên kết với store)
+    2 -- storeID
 );
 
+-- 2. Gọi stored procedure UpdatePhone
+CALL UpdatePhone(
+    5, -- phoneID
+    1, -- ownedByUserID
+    3, -- warrantyID
+    2, -- inStoreID
+    4, -- phoneModelID
+    6, -- phoneModelOptionID
+    'New', -- phoneCondition
+    12000000, -- customPrice
+    '123456789012345', -- imei
+    'Active', -- status
+    '2025-12-31' -- warrantyUntil
+);
+
+-- 3. Gọi stored procedure PurchasePhone
 CALL PurchasePhone(
     2, -- phoneModelID
     5, -- phoneID
-    6, -- sẻviceID
+    6, -- serviceID
     1, -- userID
     1, -- fromStoreID
     1, -- employeeID
@@ -235,8 +242,16 @@ CALL PurchasePhone(
     14000000 -- finalPrice
 );
 
+-- 4. Gọi stored procedure UpdateOrderStatusToDelivering
+CALL UpdateOrderStatusToDelivering(
+    1 -- orderID
+);
 
-CALL UpdateOrderStatusToDelivering(1); -- orderID
+-- 5. Gọi stored procedure CancelOrder
+CALL CancelOrder(
+    1 -- orderID
+);
+
 
 
 
