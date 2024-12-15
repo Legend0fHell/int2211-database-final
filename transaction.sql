@@ -8,7 +8,6 @@ CREATE PROCEDURE UpdateUser(
     IN email VARCHAR(50),
     IN phone VARCHAR(15),
     IN address VARCHAR(100),
-    IN provinceID INT,
     IN districtID INT,
     IN role ENUM('Customer', 'Employee'),
     IN storeID INT
@@ -20,8 +19,7 @@ BEGIN
         -- Cập nhật thông tin người dùng
         UPDATE users
         SET fullName = fullName, email = email, phone = phone,
-            address = address, provinceID = provinceID,
-            districtID = districtID, role = role, storeID = storeID
+            address = address, districtID = districtID, role = role, storeID = storeID
         WHERE userID = userID;
         -- Kiểm tra nếu cập nhật không thành công
         IF ROW_COUNT() = 0 THEN
@@ -201,6 +199,17 @@ DELIMITER ;
 
 SET SQL_SAFE_UPDATES = 0;
 
+CALL CancelOrder(6);
+
+CALL UpdatePhone(
+	2, -- phoneModelID
+    8, -- phoneID
+    6, -- serviceID
+    1, -- userID
+    1, -- fromStoreID
+    295, -- employeeID
+    15000000, -- originalPrice
+    14000000 -- finalPrice
 -- 3. Gọi stored procedure PurchasePhone
 CALL PurchasePhone(
     2, -- phoneModelID
@@ -217,6 +226,7 @@ CALL PurchasePhone(
 CALL UpdateOrderStatusToDelivering(
     1 -- orderID
 );
+
 
 
 
