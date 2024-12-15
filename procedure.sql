@@ -406,18 +406,20 @@ END $$
 
 
 -- 16. QUẢN LÝ SỐ LƯỢNG ĐƯỢC BÁN RA CỦA TỪNG MẪU ĐIỆN THOẠI
-drop procedure if exists checkSoldLevel $$
-create procedure checkSoldLevel(in phoneModelID int)
-begin
-    select pm.name as PhoneModel, 
-           count(distinct od.orderID) as TotalOrders, 
-           sum(od.quantity) as TotalSold
-    from phone_model pm
-    join phone p on pm.phoneModelID = p.phoneModelID
-    join order_detail od on p.phoneID = od.phoneID
-    where pm.phoneModelID = phoneModelID
-    group by pm.name;
-end $$
+DROP PROCEDURE IF EXISTS checkSoldLevel $$
+CREATE PROCEDURE checkSoldLevel(IN phoneModelID INT)
+BEGIN
+    SELECT pm.name AS PhoneModel, 
+           COUNT(DISTINCT od.orderID) AS TotalOrders, 
+           SUM(od.quantity) AS TotalSold
+    FROM phone_model pm
+    JOIN phone_model_option pmo ON pm.phoneModelID = pmo.phoneModelID
+    JOIN phone p ON p.phoneModelOptionID = pmo.phoneModelOptionID
+    JOIN order_detail od ON p.phoneID = od.phoneID
+    WHERE pm.phoneModelID = phoneModelID
+    GROUP BY pm.name;
+END $$
+
 
 -- 17. lỊCH SỬ MUA HÀNG CỦA KHÁCH HÀNG
 drop procedure if exists checkOrderHistory $$
