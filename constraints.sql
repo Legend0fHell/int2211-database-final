@@ -24,11 +24,9 @@ ALTER TABLE phone
 ADD FOREIGN KEY (ownedByUserID) REFERENCES users(userID),
 ADD FOREIGN KEY (warrantyID) REFERENCES warranty(warrantyID),
 ADD FOREIGN KEY (inStoreID) REFERENCES store(storeID),
-ADD FOREIGN KEY (phoneModelID) REFERENCES phone_model(phoneModelID),
 ADD FOREIGN KEY (phoneModelOptionID) REFERENCES phone_model_option(phoneModelOptionID);
 
 ALTER TABLE store
-ADD FOREIGN KEY (provinceID) REFERENCES province(provinceID),
 ADD FOREIGN KEY (districtID) REFERENCES district(districtID);
 
 ALTER TABLE district
@@ -38,7 +36,6 @@ ALTER TABLE services
 ADD FOREIGN KEY (serviceTypeID) REFERENCES service_type(serviceTypeID);
 
 ALTER TABLE users
-ADD FOREIGN KEY (provinceID) REFERENCES province(provinceID),
 ADD FOREIGN KEY (districtID) REFERENCES district(districtID),
 ADD FOREIGN KEY (storeID) REFERENCES store(storeID);
 

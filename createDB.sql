@@ -78,7 +78,6 @@ CREATE TABLE phone_review_detail (
 
 CREATE TABLE phone (
   phoneID INT NOT NULL AUTO_INCREMENT,
-  phoneModelID INT NOT NULL,
   phoneModelOptionID INT NOT NULL,
   imei VARCHAR(15) NOT NULL,
   customPrice INT,
@@ -98,7 +97,6 @@ CREATE TABLE store (
   phoneNumber VARCHAR(15) NOT NULL,
   gps_longitude DECIMAL(10, 5) NOT NULL,
   gps_latitude DECIMAL(10, 5) NOT NULL,
-  provinceID INT NOT NULL,
   districtID INT NOT NULL,
   openTime TIME,
   closeTime TIME,
@@ -140,7 +138,6 @@ CREATE TABLE users (
   email VARCHAR(50),
   phone VARCHAR(15),
   address VARCHAR(100),
-  provinceID INT,
   districtID INT,
   role ENUM('Customer', 'Employee') NOT NULL,
   storeID INT,
