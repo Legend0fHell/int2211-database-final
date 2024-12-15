@@ -441,10 +441,8 @@ CALL GetMonthlyRevenue(2,2023);
 CALL ListMonthlyRevenue(2,2023);
 CALL TotalMoneyCustomerHaveToPay(3);
 CALL ExportInvoice(3);
-select * from order_detail
-where orderID = 27 and phoneID = 1090;
-CALL GetBestSellingPhonesByMonth(2, 2023);
-CALL CheckWarranty(1, '2023-09-27');
+CALL GetBestSellingPhonesByMonth(12, 2024);
+CALL CheckWarranty(1, Now());
 CALL UpdateInStoreIDToFromStoreID(49);
 CALL GetPhonesByTechSpec(2, 0, 2.6);
 CALL GetPhonesByPrice(2000000, 13000000);
