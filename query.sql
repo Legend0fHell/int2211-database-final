@@ -31,7 +31,7 @@ LEFT OUTER JOIN
 LEFT OUTER JOIN 
     promotion p ON pdp.promotionID = p.promotionID;
 
--- Lây danh sách các điện thoại có giá trên giá trung bình của các điện thoại và có số lượng bán trên 50.
+-- Lây danh sách các điện thoại có giá trên giá trung bình của các điện thoại và có số lượng bán trên 15.
 SELECT 
     pm.name AS PhoneModelName,
     pmo.name AS PhoneOptionName,
@@ -43,14 +43,13 @@ LEFT JOIN
     phone_model_option pmo ON pm.phoneModelID = pmo.phoneModelID
 LEFT JOIN
     phone p ON pmo.phoneModelOptionID = p.phoneModelOptionID
-
 LEFT JOIN
     order_detail od ON p.phoneID = od.phoneID
 GROUP BY
     pm.phoneModelID, pmo.phoneModelOptionID
 HAVING
     pmo.price > (SELECT AVG(price) FROM phone_model_option) AND
-    COUNT(od.phoneID) > 50;
+    COUNT(od.phoneID) > 15;
 
 -- Lấy tổng doanh thu của từng cửa hàng từ bảng orders và order_detail.
 SELECT 
@@ -98,6 +97,8 @@ GROUP BY
 ORDER BY
     AverageRating DESC;
 
-
+select * from order_detail;
+select * from orders;
+select * from phone_model;
 
     
