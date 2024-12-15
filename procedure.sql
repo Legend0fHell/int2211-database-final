@@ -211,8 +211,8 @@ END $$
 
 
 -- 13. THÊM THÔNG TIN VÀO BẢNG order_detail, TÍNH GIÁ GỐC VÀ GIÁ CUỐI CÙNG
-DROP PROCEDURE IF EXISTS AddOrderDetail
-$$
+DROP PROCEDURE IF EXISTS AddOrderDetail $$
+
 CREATE PROCEDURE AddOrderDetail(
     IN p_orderID INT, 
     IN p_phoneID INT, 
@@ -248,16 +248,27 @@ BEGIN
     WHERE o.orderID = p_orderID;
 
     -- Lấy giá gốc và thông tin điện thoại
-    SELECT COALESCE(customPrice, (
-               SELECT price 
-               FROM phone_model_option 
-               WHERE phone_model_option.phoneModelOptionID = phone.phoneModelOptionID
-           )), 
-           phoneModelID, 
-           phoneModelOptionID
-    INTO v_original_price, v_phone_model_id, v_phone_model_option_id
-    FROM phone 
-    WHERE phoneID = p_phoneID;
+    SELECT 
+        COALESCE(
+            customPrice, 
+            (SELECT price 
+             FROM phone_model_option 
+             WHERE phone_model_option.phoneModelOptionID = phone.phoneModelOptionID)
+        ), 
+        pmo.phoneModelID, 
+        phone.phoneModelOptionID
+    INTO 
+        v_original_price, 
+        v_phone_model_id, 
+        v_phone_model_option_id
+    FROM 
+        phone 
+    JOIN 
+        phone_model_option pmo 
+    ON 
+        phone.phoneModelOptionID = pmo.phoneModelOptionID
+    WHERE 
+        phone.phoneID = p_phoneID;
 
     -- Xử lý khuyến mãi điện thoại
     SELECT discountPercent, discountFixed, fixedNewPrice
@@ -322,7 +333,8 @@ BEGIN
     INSERT INTO order_detail(orderID, phoneID, serviceID, promotionID, originalPrice, finalPrice)
     VALUES (p_orderID, p_phoneID, p_serviceID, p_promotionID, v_original_price, v_final_price);
 
-END $$
+END $$ 
+
 
 -- 14. SO SÁNH TECH_SPEC CỦA 2 MẪU ĐIỆN THOẠI
 DROP PROCEDURE IF EXISTS CompareTechSpec $$
