@@ -11,10 +11,15 @@ BEGIN
     SET countSold = countSold + 1
     WHERE phoneModelID = (
         SELECT phoneModelID
-        FROM phone
-        WHERE phoneID = NEW.phoneID
+        FROM phone_model_option
+        WHERE phoneModelOptionID = (
+            SELECT phoneModelOptionID
+            FROM phone
+            WHERE phoneID = NEW.phoneID
+        )
     );
 END $$
+
 
 -- TỰ ĐỘNG CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG KHI ĐÃ GIAO
 drop trigger if exists after_update_shipped_time $$
@@ -94,11 +99,25 @@ BEGIN
     -- Kiểm tra số lượng tồn kho trong một truy vấn duy nhất
     SELECT COUNT(*)
     INTO available_in_stock
-    FROM phone
-    WHERE phoneID = NEW.phoneID
-      AND phoneModelID = (SELECT phoneModelID FROM phone WHERE phoneID = NEW.phoneID)
-      AND phoneModelOptionID = (SELECT phoneModelOptionID FROM phone WHERE phoneID = NEW.phoneID)
-      AND status = 'InStore';
+    FROM phone p
+    JOIN phone_model_option pmo ON p.phoneModelOptionID = pmo.phoneModelOptionID
+    JOIN phone_model pm ON pmo.phoneModelID = pm.phoneModelID
+    WHERE p.phoneID = NEW.phoneID
+      AND p.phoneModelOptionID = (
+          SELECT phoneModelOptionID 
+          FROM phone 
+          WHERE phoneID = NEW.phoneID
+      )
+      AND pm.phoneModelID = (
+          SELECT phoneModelID 
+          FROM phone_model_option 
+          WHERE phoneModelOptionID = (
+              SELECT phoneModelOptionID 
+              FROM phone 
+              WHERE phoneID = NEW.phoneID
+          )
+      )
+      AND p.status = 'InStore';
 
     -- Nếu không còn tồn kho, phát tín hiệu lỗi
     IF available_in_stock = 0 THEN
