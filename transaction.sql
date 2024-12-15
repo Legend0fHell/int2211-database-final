@@ -199,17 +199,6 @@ DELIMITER ;
 
 SET SQL_SAFE_UPDATES = 0;
 
-CALL CancelOrder(6);
-
-CALL UpdatePhone(
-	2, -- phoneModelID
-    8, -- phoneID
-    6, -- serviceID
-    1, -- userID
-    1, -- fromStoreID
-    295, -- employeeID
-    15000000, -- originalPrice
-    14000000 -- finalPrice
 -- 3. Gọi stored procedure PurchasePhone
 CALL PurchasePhone(
     2, -- phoneModelID
