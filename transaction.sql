@@ -202,42 +202,15 @@ END $$
 DELIMITER ;
 
 SET SQL_SAFE_UPDATES = 0;
--- 1. Gọi stored procedure UpdateUser
-CALL UpdateUser(
-    1, -- userID
-    'Nguyen Van A', -- fullName
-    'nguyenvana@example.com', -- email
-    '0123456789', -- phone
-    '123 Street, City', -- address
-    NULL, -- provinceID
-    NULL, -- districtID
-    'Customer', -- role
-    2 -- storeID
-);
-
--- 2. Gọi stored procedure UpdatePhone
-CALL UpdatePhone(
-    5, -- phoneID
-    1, -- ownedByUserID
-    3, -- warrantyID
-    2, -- inStoreID
-    4, -- phoneModelID
-    6, -- phoneModelOptionID
-    'New', -- phoneCondition
-    12000000, -- customPrice
-    '123456789012345', -- imei
-    'Active', -- status
-    '2025-12-31' -- warrantyUntil
-);
 
 -- 3. Gọi stored procedure PurchasePhone
 CALL PurchasePhone(
     2, -- phoneModelID
-    5, -- phoneID
+    8, -- phoneID
     6, -- serviceID
     1, -- userID
     1, -- fromStoreID
-    1, -- employeeID
+    295, -- employeeID
     15000000, -- originalPrice
     14000000 -- finalPrice
 );
@@ -246,12 +219,6 @@ CALL PurchasePhone(
 CALL UpdateOrderStatusToDelivering(
     1 -- orderID
 );
-
--- 5. Gọi stored procedure CancelOrder
-CALL CancelOrder(
-    1 -- orderID
-);
-
 
 
 

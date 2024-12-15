@@ -106,9 +106,6 @@ BEGIN
         SET MESSAGE_TEXT = 'The selected phone model and option are out of stock.';
     END IF;
 END $$
-DELIMITER ;
-
-
 
 -- KIỂM TRA DỮ LIỆU TRƯỚC KHI THÊM VÀO BẢNG ORDERS
 DROP TRIGGER IF EXISTS before_insert_orders $$

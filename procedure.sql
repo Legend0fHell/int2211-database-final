@@ -32,19 +32,23 @@ END $$
 
 -- 3. LỌC SẢN PHẨM THEO TECH_SPEC
 DROP PROCEDURE IF EXISTS GetPhonesByTechSpec $$
-CREATE PROCEDURE GetPhonesByTechSpec(IN techSpecID INT)
+CREATE PROCEDURE GetPhonesByTechSpec(
+    IN p_techSpecID INT, 
+    IN p_infoNumMin DECIMAL(10,3), 
+    IN p_infoNumMax DECIMAL(10,3)
+)
 BEGIN
-    SELECT
-        CONCAT(pmo.name, ' ', pts.infoText) AS PhoneName,
-        pmo.price AS Price,
-        mf.name AS Manufacturer
-    FROM phone_model_option pmo
-    JOIN phone_model pm ON pmo.phoneModelID = pm.phoneModelID
-    JOIN manufacturer mf ON pm.manufacturerID = mf.manufacturerID
-    JOIN phone_tech_spec pts ON pmo.phoneModeloptionID = pts.phoneModeloptionID
-    WHERE pts.techSpecID = techSpecID;
+    SELECT 
+        pm.name AS PhoneModel, 
+        pmo.name AS OptionName,
+        pts.infoNum AS SpecValue,
+        pts.infoText AS TechSpecDescription
+    FROM phone_model pm
+    INNER JOIN phone_model_option pmo ON pm.phoneModelID = pmo.phoneModelID
+    INNER JOIN phone_tech_spec pts ON pmo.phoneModelOptionID = pts.phoneModelOptionID
+    WHERE pts.techSpecID = p_techSpecID 
+      AND pts.infoNum BETWEEN p_infoNumMin AND p_infoNumMax;
 END $$
-
 
 -- 4. ĐỀ XUẤT SẢN PHẨM BÁN CHẠY THEO THÁNG
 DROP PROCEDURE IF EXISTS GetBestSellingPhonesByMonth $$
@@ -417,6 +421,6 @@ where orderID = 27 and phoneID = 1090;
 CALL GetBestSellingPhonesByMonth(2, 2023);
 CALL CheckWarranty(1, '2023-09-27');
 CALL UpdateInStoreIDToFromStoreID(49);
-CALL GetPhonesByTechSpec(2);
+CALL GetPhonesByTechSpec(2, 0, 2.6);
 CALL GetPhonesByPrice(2000000, 13000000);
 CALL CompareTechSpec(12,23);
