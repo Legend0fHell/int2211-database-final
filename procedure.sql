@@ -388,19 +388,21 @@ BEGIN
 END $$
 
 -- 15. QUẢN LÝ SỐ LƯỢNG TỔN KHO CỦA TỪNG MẪU ĐIỆN THOẠI Ở MỖI CỦA HÀNG
-drop procedure if exists checkStockLevel $$
-create procedure checkStockLevel(in phoneModelID int)
-begin
-    select pm.name as PhoneModel, 
-           s.name as StoreName, 
-           count(p.phoneID) as StockLevel
-    from phone p
-    join phone_model pm on p.phoneModelID = pm.phoneModelID
-    join store s on p.inStoreID = s.storeID
-    where pm.phoneModelID = phoneModelID 
-      and p.status = 'InStore'
-    group by pm.name, s.name;
-end $$
+DROP PROCEDURE IF EXISTS checkStockLevel $$
+CREATE PROCEDURE checkStockLevel(IN phoneModelID INT)
+BEGIN
+    SELECT pm.name AS PhoneModel, 
+           s.name AS StoreName, 
+           COUNT(p.phoneID) AS StockLevel
+    FROM phone p
+    JOIN phone_model_option pmo ON p.phoneModelOptionID = pmo.phoneModelOptionID
+    JOIN phone_model pm ON pmo.phoneModelID = pm.phoneModelID
+    JOIN store s ON p.inStoreID = s.storeID
+    WHERE pm.phoneModelID = phoneModelID 
+      AND p.status = 'InStore'
+    GROUP BY pm.name, s.name;
+END $$
+
 
 
 -- 16. QUẢN LÝ SỐ LƯỢNG ĐƯỢC BÁN RA CỦA TỪNG MẪU ĐIỆN THOẠI
