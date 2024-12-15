@@ -42,7 +42,6 @@ CREATE PROCEDURE UpdatePhone(
     IN ownedByUserID INT,
     IN warrantyID INT,
     IN inStoreID INT,
-    IN phoneModelID INT,
     IN phoneModelOptionID INT,
     IN phoneCondition ENUM('New', 'Used', 'Refurbished'),
     IN customPrice INT,
@@ -58,8 +57,7 @@ BEGIN
         -- Cập nhật thông tin điện thoại
         UPDATE phone
         SET ownedByUserID = ownedByUserID, warrantyID = warrantyID, 
-            inStoreID = inStoreID, phoneModelID = phoneModelID,
-            phoneModelOptionID = phoneModelOptionID, 
+            inStoreID = inStoreID, phoneModelOptionID = phoneModelOptionID, 
             phoneCondition = phoneCondition, customPrice = customPrice,
             imei = imei, status = status, warrantyUntil = warrantyUntil
         WHERE phoneID = phoneID;

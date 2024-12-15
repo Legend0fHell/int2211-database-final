@@ -40,9 +40,10 @@ SELECT
 FROM
     phone_model pm
 LEFT JOIN
-    phone p ON pm.phoneModelID = p.phoneModelID
-LEFT JOIN
     phone_model_option pmo ON pm.phoneModelID = pmo.phoneModelID
+LEFT JOIN
+    phone p ON pmo.phoneModelOptionID = p.phoneModelOptionID
+
 LEFT JOIN
     order_detail od ON p.phoneID = od.phoneID
 GROUP BY
