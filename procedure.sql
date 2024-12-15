@@ -74,16 +74,21 @@ END $$
 
 -- 5. ĐỀ XUẤT CÁC SẢN PHẨM TƯƠNG TỰ DỰA TRÊN ID VỚI PHONE CONDITION KHÁC NHAU
 DROP PROCEDURE IF EXISTS GetSimilarPhones $$
+
 CREATE PROCEDURE GetSimilarPhones(IN phoneID INT)
 BEGIN
-	SELECT DISTINCT pmo.name as PhoneName,
-    p.customPrice, p.phoneCondition
+	SELECT DISTINCT 
+        pmo.name AS PhoneName,
+        p.customPrice, 
+        p.phoneCondition
     FROM phone p
-    JOIN phone_model_option pmo ON pmo.phoneModelID = p.phoneModelID
-    WHERE p.phoneModelID IN 
-		(SELECT p1.phoneModelID FROM phone p1 
-		WHERE p1.phoneID = phoneID);
-END $$
+    JOIN phone_model_option pmo ON p.phoneModelOptionID = pmo.phoneModelOptionID
+    WHERE pmo.phoneModelID IN 
+        (SELECT pmo1.phoneModelID 
+         FROM phone p1 
+         JOIN phone_model_option pmo1 ON p1.phoneModelOptionID = pmo1.phoneModelOptionID
+         WHERE p1.phoneID = phoneID);
+END $$ 
 
 -- 6. CHECK BẢO HÀNH CÒN KHẢ DỤNG KHÔNG
 DROP PROCEDURE IF EXISTS CheckWarranty $$
