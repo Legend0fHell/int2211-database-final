@@ -52,20 +52,24 @@ END $$
 
 -- 4. ĐỀ XUẤT SẢN PHẨM BÁN CHẠY THEO THÁNG
 DROP PROCEDURE IF EXISTS GetBestSellingPhonesByMonth $$
+
 CREATE PROCEDURE GetBestSellingPhonesByMonth(IN targetMonth INT, IN targetYear INT)
 BEGIN
     SELECT 
         pm.name AS PhoneModel, 
-        COUNT(DISTINCT(CONCAT(od.orderID, '-' , od.phoneID))) AS TotalSold
+        COUNT(DISTINCT(CONCAT(od.orderID, '-', od.phoneID))) AS TotalSold
     FROM phone_model pm
-    JOIN phone p ON p.phoneModelID = pm.phoneModelID
+    JOIN phone_model_option pmo ON pmo.phoneModelID = pm.phoneModelID
+    JOIN phone p ON p.phoneModelOptionID = pmo.phoneModelOptionID
     JOIN order_detail od ON p.phoneID = od.phoneID
     JOIN orders o ON od.orderID = o.orderID
-    WHERE MONTH(o.orderTime) = targetMonth AND YEAR(o.orderTime) = targetYear
+    WHERE MONTH(o.orderTime) = targetMonth 
+      AND YEAR(o.orderTime) = targetYear
     GROUP BY pm.phoneModelID
     ORDER BY TotalSold DESC
     LIMIT 5;
-END $$
+END $$ 
+
 
 
 -- 5. ĐỀ XUẤT CÁC SẢN PHẨM TƯƠNG TỰ DỰA TRÊN ID VỚI PHONE CONDITION KHÁC NHAU
