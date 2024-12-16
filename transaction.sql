@@ -8,7 +8,6 @@ CREATE PROCEDURE UpdateUser(
     IN email VARCHAR(50),
     IN phone VARCHAR(15),
     IN address VARCHAR(100),
-    IN districtID INT,
     IN role ENUM('Customer', 'Employee'),
     IN storeID INT
 )
@@ -19,7 +18,7 @@ BEGIN
         -- Cập nhật thông tin người dùng
         UPDATE users
         SET fullName = fullName, email = email, phone = phone,
-            address = address, districtID = districtID, role = role, storeID = storeID
+            address = address, role = role, storeID = storeID
         WHERE userID = userID;
         -- Kiểm tra nếu cập nhật không thành công
         IF ROW_COUNT() = 0 THEN
