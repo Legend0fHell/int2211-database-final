@@ -3,7 +3,7 @@ DELIMITER $$
 
 DROP PROCEDURE IF EXISTS UpdateUser $$
 CREATE PROCEDURE UpdateUser(
-    IN userID INT,
+    IN u_userID INT,
     IN fullName VARCHAR(50),
     IN email VARCHAR(50),
     IN phone VARCHAR(15),
@@ -19,7 +19,7 @@ BEGIN
         UPDATE users
         SET fullName = fullName, email = email, phone = phone,
             address = address, role = role, storeID = storeID
-        WHERE userID = userID;
+        WHERE userID = u_userID;
         -- Kiểm tra nếu cập nhật không thành công
         IF ROW_COUNT() = 0 THEN
             ROLLBACK;
@@ -35,7 +35,7 @@ END $$
 -- TRANSACTIONS CHO SỬA DỮ LIỆU TRONG PHONE
 DROP PROCEDURE IF EXISTS UpdatePhone $$
 CREATE PROCEDURE UpdatePhone(
-    IN phoneID INT,
+    IN p_phoneID INT,
     IN ownedByUserID INT,
     IN warrantyID INT,
     IN inStoreID INT,
@@ -57,7 +57,7 @@ BEGIN
             inStoreID = inStoreID, phoneModelOptionID = phoneModelOptionID, 
             phoneCondition = phoneCondition, customPrice = customPrice,
             imei = imei, status = status, warrantyUntil = warrantyUntil
-        WHERE phoneID = phoneID;
+        WHERE phoneID = p_phoneID;
         -- Kiểm tra nếu cập nhật không thành công
         IF ROW_COUNT() = 0 THEN
             ROLLBACK;
@@ -197,7 +197,16 @@ END $$
 DELIMITER ;
 
 SET SQL_SAFE_UPDATES = 0;
-
+CALL UpdateUser(
+    3,
+    'LilTrg',
+    'a@gmail.com',
+    '09182727373',
+    'KC-HY',
+    'Customer',
+    56
+);
+select * from users where userID = 3;
 -- 3. Gọi stored procedure PurchasePhone
 CALL PurchasePhone(
     2, -- phoneModelID
