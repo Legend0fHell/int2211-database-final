@@ -1,6 +1,10 @@
 # Cơ sở dữ liệu - Nhóm Loli
 # Hệ thống Cơ sở dữ liệu Quản lý Cửa hàng Điện thoại
 
+Slides: https://docs.google.com/presentation/d/1uADYL6XxxQWq7L0utVq8jfi3b4CuGjc-JiGLlD8jUC4/edit#slide=id.g31fe0cfb50a_0_0
+
+Báo cáo: `CSDL.pdf`
+
 ## Lưu ý
 Để tạo cơ sở dữ liệu, chạy lần lượt file `createDB.sql`, `constraints.sql`, `insert.sql`.
 
